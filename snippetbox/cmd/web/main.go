@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -12,14 +13,15 @@ import (
 // 为了让自定义logger其它函数也可以使用，一种方式是创建全局变量，但是依赖项多了就会很混乱
 // 这里使用依赖注入，会更整洁一些,application这里可以理解为是一个依赖组
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *models.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippet       *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
 	//在命令行参数中添加端口配置,另外还可以通过配置文件来做这件事
-	addr := flag.String("addr", ":4000", "HTTP network address")
+	addr := flag.String("addr", ":4001", "HTTP network address")
 	dsn := flag.String("dsn",
 		"xm:123456@tcp(10.0.1.17:3306)/snippetbox?parseTime=True",
 		"MySQL data source name")
@@ -35,11 +37,17 @@ func main() {
 		errorLog.Fatal(err)
 	}
 	defer db.Close()
+	//将要解析的html模板文件加载到内存
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
 	//实例化依赖组，包含两条日志依赖项,和数据库连接对象
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snippets: &models.SnippetModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippet:       &models.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	//通过自定义httpServer，将HTTP server产生的日志用自定义的日志收集

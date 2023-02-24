@@ -38,7 +38,7 @@ func (m *SnippetModel) Insert(title string, content string, expires int) (int, e
 }
 
 func (m *SnippetModel) Get(id int) (*Snippet, error) {
-	stmt := `SELECT id, title, content, created, expires FROM snippets WHERE expires > UTC_TIMESTAMP() AND id = ?`
+	stmt := `SELECT id, title, content, created, expires FROM snippet WHERE expires > UTC_TIMESTAMP() AND id = ?`
 
 	s := &Snippet{}
 	// QueryRow最多返回一行结果，通过row.Scan()将返回的值复制到snippet结构体
@@ -56,7 +56,7 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 	return s, nil
 }
 func (m *SnippetModel) Latest() ([]*Snippet, error) {
-	stmt := `SELECT id, title, content, created, expires FROM snippets WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
+	stmt := `SELECT id, title, content, created, expires FROM snippet WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
 
 	// Query() 可以返回多行数据
 	rows, err := m.DB.Query(stmt)
