@@ -1,8 +1,10 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+)
 
-func (app *application) routes() *http.ServeMux {
+func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	//通过内置方法以 "./ui/static"路径创建一个文件服务
@@ -13,5 +15,11 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("/", app.home)
 	mux.HandleFunc("/snippet/view", app.snippetView)
 	mux.HandleFunc("/snippet/create", app.snippetCreate)
-	return mux
+
+	//chain := New(app.recoverPanic, app.logRequest, secureHeaders)
+	chain := New()
+	chain.Append(app.recoverPanic)
+	chain.Append(app.logRequest, secureHeaders)
+	return chain.Then(mux)
+	//return app.recoverPanic(app.logRequest(secureHeaders(mux)))
 }
