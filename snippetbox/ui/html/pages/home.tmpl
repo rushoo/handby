@@ -13,7 +13,8 @@
         </tr>
         {{range .Snippets}}
         <tr>
-            <td><a href='/snippet/view?id={{.ID}}'>{{.Title}}</a></td>
+<!--            <td><a href='/snippet/view?id={{.ID}}'>{{.Title}}</a></td>-->
+            <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td> 
             <!-- 使用自定义的时间转换方法 -->
             <td>{{humanDate .Created}}</td>
             <td>#{{.ID}}</td>
