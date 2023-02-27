@@ -4,12 +4,13 @@
 
 {{define "main"}}
 <form action='/snippet/create' method='POST' xmlns="http://www.w3.org/1999/html">
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     <div>
         <label>标题:</label>
         {{with .Form.FieldErrors.title}}
             <label class='error'>{{.}}</label>
         {{end}}
-        <input type='text' name='title' >
+        <input type='text' name='title' value='{{.Form.Title}}'>
     </div>
     <div>
         <label>内容:</label>

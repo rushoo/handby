@@ -10,11 +10,13 @@ import (
 // 分设两个字段解析单一或多个snippet,
 // 增加一层嵌套,这样在模板中解析时字段名称就是{{.Snippet.xxx}},而非直接{{.xxx}},方便处理多种数据来源
 type templateData struct {
-	Snippet     *models.Snippet
-	Snippets    []*models.Snippet
-	CurrentYear int
-	Form        any
-	Flash       string
+	Snippet         *models.Snippet
+	Snippets        []*models.Snippet
+	CurrentYear     int
+	Form            any
+	Flash           string
+	IsAuthenticated bool
+	CSRFToken       string
 }
 
 // 将模板文件先解析到内存中,这样就不至于对于每个来自客户端的请求都从磁盘解析渲染一次

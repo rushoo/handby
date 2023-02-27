@@ -1,17 +1,14 @@
 package validator
 
 import (
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
 
 type Validator struct {
-	FieldErrors map[string]string
-}
-
-// Valid 没有错误则返回true
-func (v *Validator) Valid() bool {
-	return len(v.FieldErrors) == 0
+	NonFieldErrors []string
+	FieldErrors    map[string]string
 }
 
 // AddFieldError 添加新的错误信息到 FieldErrors map
@@ -42,6 +39,9 @@ func NotBlank(value string) bool {
 func MaxChars(value string, n int) bool {
 	return utf8.RuneCountInString(value) <= n
 }
+func MinChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) >= n
+}
 
 // PermittedInt 限定合法字符元素
 func PermittedInt(value int, permittedValues ...int) bool {
@@ -51,4 +51,20 @@ func PermittedInt(value int, permittedValues ...int) bool {
 		}
 	}
 	return false
+}
+
+var EmailRX = regexp.MustCompile(
+	"^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+
+// Matches 这里用来做邮箱验证
+func Matches(value string, rx *regexp.Regexp) bool {
+	return rx.MatchString(value)
+}
+
+func (v *Validator) Valid() bool {
+	return len(v.FieldErrors) == 0 && len(v.NonFieldErrors) == 0
+}
+
+func (v *Validator) AddNonFieldError(message string) {
+	v.NonFieldErrors = append(v.NonFieldErrors, message)
 }

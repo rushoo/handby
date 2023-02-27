@@ -14,24 +14,25 @@ func (app *application) routes() http.Handler {
 		app.notFound(w)
 	})
 
-	//通过内置方法以 "./ui/static"路径创建一个文件服务
-	//文件服务器接受以"/static/"开头的请求.在具体访问前去掉"/static"前缀
+	//创建一个文件服务，httprouter.Handler要求 *something(而非*) 以表示路径下全匹配，something不要求有实际意义
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	router.Handler(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer))
+	router.Handler(http.MethodGet, "/static/*httprouter-filepath-rule", http.StripPrefix("/static", fileServer))
 
-	//dynamic := New(app.sessionManager.LoadAndSave)
+	chain := New(app.sessionManager.LoadAndSave, noSurf)
+	router.Handler(http.MethodGet, "/", chain.ThenFunc(app.home))
+	router.Handler(http.MethodGet, "/snippet/view/:id", chain.ThenFunc(app.snippetView))
+	router.Handler(http.MethodGet, "/user/signup", chain.ThenFunc(app.userSignup))
+	router.Handler(http.MethodPost, "/user/signup", chain.ThenFunc(app.userSignupPost))
+	router.Handler(http.MethodGet, "/user/login", chain.ThenFunc(app.userLogin))
+	router.Handler(http.MethodPost, "/user/login", chain.ThenFunc(app.userLoginPost))
 
-	router.HandlerFunc(http.MethodGet, "/", app.home)
-	router.HandlerFunc(http.MethodGet, "/snippet/view/:id", app.snippetView)
-	router.HandlerFunc(http.MethodGet, "/snippet/create", app.snippetCreate)
-	router.HandlerFunc(http.MethodPost, "/snippet/create", app.snippetCreatePost)
+	//须身份验证的路由，添加身份验证
+	chain.Append(app.requireAuthentication)
+	router.Handler(http.MethodGet, "/snippet/create", chain.ThenFunc(app.snippetCreate))
+	router.Handler(http.MethodPost, "/snippet/create", chain.ThenFunc(app.snippetCreatePost))
+	router.Handler(http.MethodPost, "/user/logout", chain.ThenFunc(app.userLogoutPost))
 
-	//chain := New(app.recoverPanic, app.logRequest, secureHeaders)
-	chain := New()
-	chain.Append(app.recoverPanic)
-	chain.Append(app.logRequest, secureHeaders)
-	//添加session管理
-	chain.Append(app.sessionManager.LoadAndSave)
-	return chain.Then(router)
+	standard := New(app.recoverPanic, app.logRequest, secureHeaders)
+	return standard.Then(router)
 	//return app.recoverPanic(app.logRequest(secureHeaders(router)))
 }

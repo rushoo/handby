@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"github.com/alexedwards/scs/mysqlstore"
 	"github.com/alexedwards/scs/v2"
@@ -19,6 +20,7 @@ import (
 type application struct {
 	errorLog       *log.Logger
 	infoLog        *log.Logger
+	users          *models.UserModel
 	snippet        *models.SnippetModel
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
@@ -53,24 +55,36 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
+	// 在https下才发送cookie
+	sessionManager.Cookie.Secure = true
 	//实例化依赖注入组
 	app := &application{
 		errorLog:       errorLog,
 		infoLog:        infoLog,
+		users:          &models.UserModel{DB: db},
 		snippet:        &models.SnippetModel{DB: db},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
 	}
-
+	//使用tls.X25519, tls.CurveP256算法替换默认配置
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
 	//通过自定义httpServer，将HTTP server产生的日志用自定义的日志收集
 	infoLog.Printf("start sever on %s", *addr)
 	srv := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
+		Addr:      *addr,
+		ErrorLog:  errorLog,
+		Handler:   app.routes(),
+		TLSConfig: tlsConfig,
+		// 增加超时限制，IdleTimeout是启用keep-alives最大等待下次连接时间
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
-	err = srv.ListenAndServe()
+	//err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	//应该避免在main函数之外使用Panic()、Fatal()，把错误传回来main，然后在此exit
 	//另外在前期开发过程中一些可能如空指针引用等人为错误可以在函数内fatal或panic以方便调试
 	errorLog.Fatal(err)
