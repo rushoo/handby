@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/form/v4"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 // 集中错误处理，将常见的几类错误包装在此，一定程度上避免代码重复
@@ -74,4 +75,10 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 	}
 	fmt.Printf("dst: %+v\n", dst)
 	return nil
+}
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		CurrentYear: time.Now().Year(),
+		Flash:       app.sessionManager.PopString(r.Context(), "flash"),
+	}
 }

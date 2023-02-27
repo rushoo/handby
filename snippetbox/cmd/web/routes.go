@@ -18,7 +18,8 @@ func (app *application) routes() http.Handler {
 	//文件服务器接受以"/static/"开头的请求.在具体访问前去掉"/static"前缀
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	router.Handler(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer))
-	//router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
+
+	//dynamic := New(app.sessionManager.LoadAndSave)
 
 	router.HandlerFunc(http.MethodGet, "/", app.home)
 	router.HandlerFunc(http.MethodGet, "/snippet/view/:id", app.snippetView)
@@ -29,6 +30,8 @@ func (app *application) routes() http.Handler {
 	chain := New()
 	chain.Append(app.recoverPanic)
 	chain.Append(app.logRequest, secureHeaders)
+	//添加session管理
+	chain.Append(app.sessionManager.LoadAndSave)
 	return chain.Then(router)
 	//return app.recoverPanic(app.logRequest(secureHeaders(router)))
 }

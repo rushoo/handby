@@ -14,12 +14,7 @@ type templateData struct {
 	Snippets    []*models.Snippet
 	CurrentYear int
 	Form        any
-}
-
-func newTemplateData() *templateData {
-	return &templateData{
-		CurrentYear: time.Now().Year(),
-	}
+	Flash       string
 }
 
 // 将模板文件先解析到内存中,这样就不至于对于每个来自客户端的请求都从磁盘解析渲染一次

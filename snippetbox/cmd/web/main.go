@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
@@ -9,16 +11,18 @@ import (
 	"net/http"
 	"os"
 	"snippetbox/internal/models"
+	"time"
 )
 
 // 为了让自定义logger其它函数也可以使用，一种方式是创建全局变量，但是依赖项多了就会很混乱
 // 这里使用依赖注入，会更整洁一些,application这里可以理解为是一个依赖组
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	snippet       *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	snippet        *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -45,13 +49,18 @@ func main() {
 		errorLog.Fatal(err)
 	}
 	formDecoder := form.NewDecoder()
-	//实例化依赖组，包含两条日志依赖项,和数据库连接对象、formDecoder
+
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+	//实例化依赖注入组
 	app := &application{
-		errorLog:      errorLog,
-		infoLog:       infoLog,
-		snippet:       &models.SnippetModel{DB: db},
-		templateCache: templateCache,
-		formDecoder:   formDecoder,
+		errorLog:       errorLog,
+		infoLog:        infoLog,
+		snippet:        &models.SnippetModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	//通过自定义httpServer，将HTTP server产生的日志用自定义的日志收集

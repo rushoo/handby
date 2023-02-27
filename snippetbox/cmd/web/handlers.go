@@ -26,7 +26,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-	data := newTemplateData()
+	data := app.newTemplateData(r)
 	data.Snippets = snippets
 	app.render(w, http.StatusOK, "home.tmpl", data)
 }
@@ -50,13 +50,13 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	data := newTemplateData()
+	data := app.newTemplateData(r)
 	data.Snippet = snippet
 	app.render(w, http.StatusOK, "view.tmpl", data)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	data := newTemplateData()
+	data := app.newTemplateData(r)
 	data.Form = snippetCreateForm{
 		Expires: 365,
 	}
@@ -75,7 +75,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	form.CheckField(validator.NotBlank(form.Content), "content", "内容不可为空")
 	form.CheckField(validator.PermittedInt(form.Expires, 1, 7, 365), "expires", "过期时间应设置为 1, 7 或 365")
 	if !form.Valid() {
-		data := newTemplateData()
+		data := app.newTemplateData(r)
 		data.Form = form
 		fmt.Printf("data: %+v\n", data)
 		app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
@@ -87,6 +87,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, err)
 		return
 	}
+	app.sessionManager.Put(r.Context(), "flash", "创建成功!")
 	// 303重定向到页面"/snippet/view?id=id"显示刚刚插入的结果
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
