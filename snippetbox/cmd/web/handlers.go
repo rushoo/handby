@@ -6,8 +6,17 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"snippetbox/internal/models"
+	"snippetbox/internal/validator"
 	"strconv"
 )
+
+// 指定tags作为decode时依据
+type snippetCreateForm struct {
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
+}
 
 //通过app的依赖注入，这里的handler就可以获取到数据库连接并使用model{}操作数据库
 
@@ -23,7 +32,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	//从请求中获取id
+	//使用httprouter提供的方法，从请求中获取id
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.Atoi(params.ByName("id"))
 	//id, err := strconv.Atoi(r.URL.Query().Get("id"))
@@ -47,14 +56,33 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display the form for creating a new snippet..."))
+	data := newTemplateData()
+	data.Form = snippetCreateForm{
+		Expires: 365,
+	}
+	app.render(w, http.StatusOK, "create.tmpl", data)
 }
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+	var form snippetCreateForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	//校验请求内容
+	form.CheckField(validator.NotBlank(form.Title), "title", "标题不可为空")
+	form.CheckField(validator.MaxChars(form.Title, 100), "title", "标题应少于100字")
+	form.CheckField(validator.NotBlank(form.Content), "content", "内容不可为空")
+	form.CheckField(validator.PermittedInt(form.Expires, 1, 7, 365), "expires", "过期时间应设置为 1, 7 或 365")
+	if !form.Valid() {
+		data := newTemplateData()
+		data.Form = form
+		fmt.Printf("data: %+v\n", data)
+		app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
+		return
+	}
 
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 7
-	id, err := app.snippet.Insert(title, content, expires)
+	id, err := app.snippet.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, err)
 		return

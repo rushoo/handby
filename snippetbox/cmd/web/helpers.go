@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/go-playground/form/v4"
 	"net/http"
 	"runtime/debug"
 )
@@ -55,4 +57,21 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 	}
 	//确认页面解析正确再一次写入
 	buf.WriteTo(w)
+}
+func (app *application) decodePostForm(r *http.Request, dst any) error {
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		// 如果dst没传值，就应该panic
+		var invalidDecoderError *form.InvalidDecoderError
+		if errors.As(err, &invalidDecoderError) {
+			panic(err)
+		}
+		return err
+	}
+	fmt.Printf("dst: %+v\n", dst)
+	return nil
 }

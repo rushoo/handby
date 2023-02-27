@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"log"
@@ -17,6 +18,7 @@ type application struct {
 	infoLog       *log.Logger
 	snippet       *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 func main() {
@@ -42,12 +44,14 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	//实例化依赖组，包含两条日志依赖项,和数据库连接对象
+	formDecoder := form.NewDecoder()
+	//实例化依赖组，包含两条日志依赖项,和数据库连接对象、formDecoder
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		snippet:       &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 
 	//通过自定义httpServer，将HTTP server产生的日志用自定义的日志收集

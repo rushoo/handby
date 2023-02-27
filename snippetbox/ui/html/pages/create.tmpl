@@ -1,0 +1,34 @@
+{{define "title"}}
+    创建Snippet
+{{end}}
+
+{{define "main"}}
+<form action='/snippet/create' method='POST' xmlns="http://www.w3.org/1999/html">
+    <div>
+        <label>标题:</label>
+        {{with .Form.FieldErrors.title}}
+            <label class='error'>{{.}}</label>
+        {{end}}
+        <input type='text' name='title' >
+    </div>
+    <div>
+        <label>内容:</label>
+        {{with .Form.FieldErrors.content}}
+            <label class='error'>{{.}}</label>
+        {{end}}
+        <textarea name='content'>{{.Form.Content}}</textarea>
+    </div>
+    <div>
+        <label>过后删除:</label>
+        {{with .Form.FieldErrors.expires}}
+            <label class='error'>{{.}}</label>
+        {{end}}
+        <input type='radio' name='expires' value='365'  {{if (eq .Form.Expires 365)}}checked{{end}} > 一年
+        <input type='radio' name='expires' value='7'  {{if (eq .Form.Expires 7)}}checked{{end}}> 一周
+        <input type='radio' name='expires' value='1'  {{if (eq .Form.Expires 1)}}checked{{end}}> 一天
+    </div>
+    <div>
+        <input type='submit' value='创建'>
+    </div>
+</form>
+{{end}}

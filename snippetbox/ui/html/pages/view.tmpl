@@ -13,8 +13,8 @@
         <pre><code>{{.Content}}</code></pre>
         <div class='metadata'>
             <!-- 使用自定义方法，还能使用管道方式 -->
-            <time>Created: {{.Created | humanDate}}</time>
-            <time>Expires: {{humanDate .Expires}}</time>
+            <time>创建: {{.Created | humanDate}}</time>
+            <time>失效: {{humanDate .Expires}}</time>
         </div>
     </div>
     {{end}}

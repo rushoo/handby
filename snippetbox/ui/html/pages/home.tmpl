@@ -1,20 +1,20 @@
 {{define "title"}}
-    Home
+    首页
 {{end}}
 
 {{define "main"}}
-    <h2>Latest Snippets</h2>
+    <h2>最新记录</h2>
     {{if .Snippets}}
     <table>
         <tr>
-            <th>Title</th>
-            <th>Created</th>
+            <th>标题</th>
+            <th>创建时间</th>
             <th>ID</th>
         </tr>
         {{range .Snippets}}
         <tr>
 <!--            <td><a href='/snippet/view?id={{.ID}}'>{{.Title}}</a></td>-->
-            <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td> 
+            <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td>
             <!-- 使用自定义的时间转换方法 -->
             <td>{{humanDate .Created}}</td>
             <td>#{{.ID}}</td>
@@ -22,6 +22,6 @@
         {{end}}
     </table>
     {{else}}
-    <p>There's nothing to see here... yet!</p>
+    <p>暂无内容发布......</p>
     {{end}}
 {{end}}
