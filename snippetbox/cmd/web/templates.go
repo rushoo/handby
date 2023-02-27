@@ -2,8 +2,10 @@ package main
 
 import (
 	"html/template"
+	"io/fs"
 	"path/filepath"
 	"snippetbox/internal/models"
+	"snippetbox/ui"
 	"time"
 )
 
@@ -23,8 +25,9 @@ type templateData struct {
 func newTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
 
-	//拿到给定路径下的所有文件
-	pages, err := filepath.Glob("./ui/html/pages/*.tmpl")
+	//拿到给定路径下的所有文件、、使用embed files
+	//pages, err := filepath.Glob("./ui/html/pages/*.tmpl")
+	pages, err := fs.Glob(ui.Files, "html/pages/*.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -32,27 +35,12 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		// 获取文件名
 		name := filepath.Base(page)
 		//// 根据目的将待解析的文件合在一起,一次解析,但这样就写死了,所以采用分步解析
-		//files := []string{
-		//	"./ui/html/base.tmpl",
-		//	"./ui/html/partials/nav.tmpl",
-		//	page,
-		//}
-		//ts, err := template.ParseFiles(files...)
-
-		//ts, err := template.ParseFiles("./ui/html/base.tmpl")
-		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.tmpl")
-		//myTemplate := template.New(name)
-		//myTemplate = myTemplate.Funcs(functions)
-		//ts, err := myTemplate.ParseFiles("./ui/html/base.tmpl")
-		if err != nil {
-			return nil, err
+		files := []string{
+			"html/base.tmpl",
+			"html/partials/*.tmpl",
+			page,
 		}
-		//这样可以解析一整个路径下的相关文件
-		ts, err = ts.ParseGlob("./ui/html/partials/*.tmpl")
-		if err != nil {
-			return nil, err
-		}
-		ts, err = ts.ParseFiles(page)
+		ts, err := template.New(name).Funcs(functions).ParseFS(ui.Files, files...)
 		if err != nil {
 			return nil, err
 		}

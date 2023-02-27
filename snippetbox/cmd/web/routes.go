@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
+	"snippetbox/ui"
 )
 
 func (app *application) routes() http.Handler {
@@ -15,8 +16,9 @@ func (app *application) routes() http.Handler {
 	})
 
 	//创建一个文件服务，httprouter.Handler要求 *something(而非*) 以表示路径下全匹配，something不要求有实际意义
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	router.Handler(http.MethodGet, "/static/*httprouter-filepath-rule", http.StripPrefix("/static", fileServer))
+	//使用embed files
+	fileServer := http.FileServer(http.FS(ui.Files))
+	router.Handler(http.MethodGet, "/static/*httprouter-filepath-rule", fileServer)
 
 	chain := New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 	router.Handler(http.MethodGet, "/", chain.ThenFunc(app.home))
