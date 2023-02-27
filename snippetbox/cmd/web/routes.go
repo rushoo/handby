@@ -18,7 +18,7 @@ func (app *application) routes() http.Handler {
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	router.Handler(http.MethodGet, "/static/*httprouter-filepath-rule", http.StripPrefix("/static", fileServer))
 
-	chain := New(app.sessionManager.LoadAndSave, noSurf)
+	chain := New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 	router.Handler(http.MethodGet, "/", chain.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/snippet/view/:id", chain.ThenFunc(app.snippetView))
 	router.Handler(http.MethodGet, "/user/signup", chain.ThenFunc(app.userSignup))
