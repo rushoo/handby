@@ -20,6 +20,9 @@ func (app *application) routes() http.Handler {
 	fileServer := http.FileServer(http.FS(ui.Files))
 	router.Handler(http.MethodGet, "/static/*httprouter-filepath-rule", fileServer)
 
+	//对应测试的ping请求
+	router.HandlerFunc(http.MethodGet, "/ping", ping)
+
 	chain := New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 	router.Handler(http.MethodGet, "/", chain.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/snippet/view/:id", chain.ThenFunc(app.snippetView))

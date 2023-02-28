@@ -206,3 +206,7 @@ func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 	data.Form = userLoginForm{}
 	app.render(w, http.StatusOK, "login.tmpl", data)
 }
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}

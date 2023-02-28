@@ -57,7 +57,11 @@ func newTemplateCache() (map[string]*template.Template, error) {
 3、自定义template对象，将此funcMap通过template.Funcs()在解析模板前注册
 */
 func humanDate(t time.Time) string {
-	return t.Format("02 Jan 2006 at 15:04")
+	if t.IsZero() {
+		return ""
+	}
+	//format前先转为utc格式
+	return t.UTC().Format("02 Jan 2006 at 15:04")
 }
 
 // 稍后将此自定义funMap注册
