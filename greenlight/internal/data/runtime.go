@@ -17,7 +17,6 @@ func (r Runtime) MarshalJSON() ([]byte, error) {
 	return []byte(quotedJSONValue), nil
 }
 func (r *Runtime) UnmarshalJSON(jsonValue []byte) error {
-	fmt.Println("调用自定义UnmarshalJSON")
 	unQuotedJSONValue, err := strconv.Unquote(string(jsonValue))
 	if err != nil {
 		return ErrInvalidRuntimeFormat
